@@ -1,0 +1,16 @@
+connection "aws" {
+  plugin      = "aws"
+  type        = "aggregator"
+  connections = ["aws_*"]
+}
+
+{{ range .Accounts -}}
+connection "aws_{{ .Name }}" {
+  plugin         = "aws"
+  profile        = "{{ .Name }}"
+  regions        = [{{range $region := .TargetRegions}}"{{ $region }}",{{end}}]
+  default_region = "{{ .DefaultRegion }}"
+  import_schema  = "{{ .ImportSchema }}"
+}
+
+{{ end -}}
