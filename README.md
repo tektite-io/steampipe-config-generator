@@ -22,7 +22,6 @@ We have created this tool to facilitate the creation and management of these fil
 
 - Valid AWS credentials with the following IAM actions:
   ```json
-  "organizations:DescribeOrganization",
   "organizations:ListAccounts",
   "organizations:ListParents",
   "organizations:ListTagsForResource"
