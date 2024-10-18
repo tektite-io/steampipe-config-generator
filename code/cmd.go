@@ -19,6 +19,7 @@ type CmdFlags struct {
 	defaultRegion    string
 	targetRegions    []string
 	assumeRoleArn    string
+	templatePath     string
 	skipOUs          []string
 }
 
@@ -32,6 +33,7 @@ func ParseFlags() (*CmdFlags, error) {
 	flag.StringVar(&flags.importSchema, "schema", "enabled", "AWS Connection import schema. Valid values are: enabled, disabled")
 	flag.StringVar(&flags.defaultRegion, "region", "", "AWS Connection default region")
 	flag.StringVar(&flags.assumeRoleArn, "assume", "", "AWS Role to assume for getting Organization accounts")
+	flag.StringVar(&flags.templatePath, "template", "", "Custom connections template path")
 	targetRegions := flag.String("regions", "all", "AWS Connection target regions")
 	skipOUs := flag.String("skipOUs", "", "AWS OU IDs to skip from account connections")
 	flag.Parse()

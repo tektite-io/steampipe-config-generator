@@ -31,6 +31,8 @@ type ConnectionsTemplateData struct {
 	Tags     map[string][]string
 }
 
+const defaultTmplFile = "templates/aws_connections.tmpl"
+
 func createAWSCredentialsFile(credentialPath string, organizationAccounts []CredentialAccount) error {
 	tmplFile := "templates/aws_credentials.tmpl"
 
@@ -59,12 +61,10 @@ func createAWSCredentialsFile(credentialPath string, organizationAccounts []Cred
 	return nil
 }
 
-func createAWSConnectionsFile(connectionsPath string, data ConnectionsTemplateData) error {
-	tmplFile := "templates/aws_connections.tmpl"
-
-	t, err := template.ParseFS(templates, tmplFile)
+func createAWSConnectionsFile(connectionsPath, templatePath string, data ConnectionsTemplateData) error {
+	t, err := parseTemplate(templatePath)
 	if err != nil {
-		return fmt.Errorf("error parsing template: %v", err)
+		return err
 	}
 
 	err = os.MkdirAll(connectionsPath, os.ModePerm)
@@ -87,6 +87,14 @@ func createAWSConnectionsFile(connectionsPath string, data ConnectionsTemplateDa
 	return nil
 }
 
+func parseTemplate(templatePath string) (*template.Template, error) {
+	if templatePath == "" {
+		return template.ParseFS(templates, defaultTmplFile)
+	} else {
+		return template.ParseFiles(templatePath)
+	}
+}
+
 func main() {
 	flags, err := ParseFlags()
 
@@ -105,6 +113,7 @@ func main() {
 	defaultRegion := flags.defaultRegion
 	targetRegions := flags.targetRegions
 	assumeRoleArn := flags.assumeRoleArn
+	templatePath := flags.templatePath
 	skipOUs := flags.skipOUs
 
 	ctx := context.Background()
@@ -179,7 +188,7 @@ func main() {
 		return
 	}
 
-	err = createAWSConnectionsFile(connectionsPath, data)
+	err = createAWSConnectionsFile(connectionsPath, templatePath, data)
 	if err != nil {
 		log.Error("error creating aws connections file:", err)
 		return
