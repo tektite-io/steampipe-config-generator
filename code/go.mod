@@ -1,4 +1,4 @@
-module credential_generator
+module github.com/unicrons/steampipe-config-generator
 
 go 1.23.2
 
