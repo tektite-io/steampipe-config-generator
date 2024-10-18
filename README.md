@@ -10,6 +10,8 @@ Manage your [Steampipe](https://steampipe.io/) AWS config files at scale!
 We have created this tool to facilitate the creation and management of these files in organizations with multiple accounts.  
 If you want more details about this, check our blog post: [Automate your Steampipe AWS configuration with AWS Organizations](https://unicrons.cloud/en/2024/10/18/automate-your-steampipe-aws-configuration-with-aws-organizations/)
 
+![](./docs/flow.png)
+
 
 ## Features
 
