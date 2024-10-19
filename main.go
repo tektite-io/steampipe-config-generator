@@ -1,7 +1,6 @@
 package main
 
 import (
-	"context"
 	"embed"
 	"fmt"
 	"html/template"
@@ -10,7 +9,10 @@ import (
 	"slices"
 	"strings"
 
-	"github.com/aws/aws-sdk-go-v2/config"
+	"github.com/unicrons/steampipe-config-generator/cmd"
+	"github.com/unicrons/steampipe-config-generator/pkg/aws"
+	"github.com/unicrons/steampipe-config-generator/pkg/logger"
+
 	log "github.com/sirupsen/logrus"
 )
 
@@ -96,7 +98,7 @@ func parseTemplate(templatePath string) (*template.Template, error) {
 }
 
 func main() {
-	flags, err := ParseFlags()
+	flags, err := cmd.ParseFlags()
 
 	if err != nil {
 		log.Error("error parsing flags:", err)
@@ -105,49 +107,23 @@ func main() {
 
 	log.Debug("parsed flags:", flags)
 
-	roleName := flags.roleName
-	credentialSource := flags.credentialSource
-	credentialPath := flags.credentialPath
-	connectionsPath := flags.connectionsPath
-	importSchema := flags.importSchema
-	defaultRegion := flags.defaultRegion
-	targetRegions := flags.targetRegions
-	assumeRoleArn := flags.assumeRoleArn
-	templatePath := flags.templatePath
-	skipOUs := flags.skipOUs
+	roleName := flags.RoleName
+	credentialSource := flags.CredentialSource
+	credentialPath := flags.CredentialPath
+	connectionsPath := flags.ConnectionsPath
+	importSchema := flags.ImportSchema
+	defaultRegion := flags.DefaultRegion
+	targetRegions := flags.TargetRegions
+	assumeRoleArn := flags.AssumeRoleArn
+	templatePath := flags.TemplatePath
+	skipOUs := flags.SkipOUs
+	logFormat := flags.LogFormat
 
-	ctx := context.Background()
-	awscfg, err := config.LoadDefaultConfig(ctx)
+	logger.SetLoggerFormat(logFormat)
+
+	accounts, err := aws.GetOrganizationAccounts(assumeRoleArn, defaultRegion)
 	if err != nil {
-		log.Error("error loading aws config:", err)
-		return
-	}
-
-	if assumeRoleArn != "" {
-		log.Info("assuming role: ", assumeRoleArn)
-
-		sts, err := NewStsClient(awscfg)
-		if err != nil {
-			log.Error("error getting sts client:", err)
-			return
-		}
-
-		awscfg, err = GetAssumeRoleConfig(sts, assumeRoleArn, defaultRegion, "steampipeConfigGenerator")
-		if err != nil {
-			log.Error("error getting aws config:", err)
-			return
-		}
-	}
-
-	organizationsClient, err := NewOrganizationsClient(awscfg)
-	if err != nil {
-		log.Error("error loading aws config:", err)
-		return
-	}
-
-	accounts, err := organizationsClient.ListOrganizationAccounts()
-	if err != nil {
-		log.Error("error retrieving organization accounts:", err)
+		log.Error("error getting aws organization accounts:", err)
 		return
 	}
 

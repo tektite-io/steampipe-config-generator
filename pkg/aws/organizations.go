@@ -1,10 +1,11 @@
-package main
+package aws
 
 import (
 	"context"
 	"fmt"
 	"sync"
 
+	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/service/organizations"
 	log "github.com/sirupsen/logrus"
 )
@@ -14,6 +15,40 @@ type OrganizationAccount struct {
 	AccountID string
 	Tags      map[string]string
 	AccountOU string
+}
+
+func GetOrganizationAccounts(assumeRoleArn, region string) ([]OrganizationAccount, error) {
+	ctx := context.Background()
+	awscfg, err := config.LoadDefaultConfig(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("error loading aws config: %w", err)
+	}
+
+	if assumeRoleArn != "" {
+		log.Info("assuming role: ", assumeRoleArn)
+
+		sts, err := newStsClient(awscfg)
+		if err != nil {
+			return nil, fmt.Errorf("error getting sts client: %w", err)
+		}
+
+		awscfg, err = getAssumeRoleConfig(sts, assumeRoleArn, region, "steampipeConfigGenerator")
+		if err != nil {
+			return nil, fmt.Errorf("error getting aws config: %w", err)
+		}
+	}
+
+	organizationsClient, err := newOrganizationsClient(awscfg)
+	if err != nil {
+		return nil, fmt.Errorf("error loading aws config: %w", err)
+	}
+
+	accounts, err := organizationsClient.listOrganizationAccounts()
+	if err != nil {
+		return nil, fmt.Errorf("error retrieving organization accounts: %w", err)
+	}
+
+	return accounts, nil
 }
 
 func (c *OrganizationsClient) listOrganizationAccountTags(accountId *string) (map[string]string, error) {
@@ -56,7 +91,7 @@ func (c *OrganizationsClient) getAccountOU(accountId *string) (string, error) {
 	return "", fmt.Errorf("no parent OU found for account ID: %s", *accountId)
 }
 
-func (c *OrganizationsClient) ListOrganizationAccounts() ([]OrganizationAccount, error) {
+func (c *OrganizationsClient) listOrganizationAccounts() ([]OrganizationAccount, error) {
 	params := &organizations.ListAccountsInput{}
 	paginator := organizations.NewListAccountsPaginator(c.client, params)
 

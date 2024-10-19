@@ -1,4 +1,4 @@
-package main
+package logger
 
 import (
 	"os"
@@ -18,5 +18,12 @@ func init() {
 	}
 
 	log.SetLevel(ll)
-	log.SetFormatter(&log.JSONFormatter{})
+}
+
+func SetLoggerFormat(logFormat string) {
+
+	switch logFormat {
+	case "json":
+		log.SetFormatter(&log.JSONFormatter{})
+	}
 }
