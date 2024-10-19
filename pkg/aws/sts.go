@@ -1,4 +1,4 @@
-package main
+package aws
 
 import (
 	"context"
@@ -27,7 +27,7 @@ func (sts *StsClient) assumeRole(role, sessionName string) (aws.Credentials, err
 	return value, err
 }
 
-func GetAssumeRoleConfig(sts *StsClient, roleArn, region, sessionName string) (aws.Config, error) {
+func getAssumeRoleConfig(sts *StsClient, roleArn, region, sessionName string) (aws.Config, error) {
 
 	ctx := context.Background()
 
