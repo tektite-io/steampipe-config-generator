@@ -20,6 +20,7 @@ type CmdFlags struct {
 	TargetRegions    []string
 	AssumeRoleArn    string
 	TemplatePath     string
+	LogFormat        string
 	SkipOUs          []string
 }
 
@@ -34,6 +35,7 @@ func ParseFlags() (*CmdFlags, error) {
 	flag.StringVar(&flags.DefaultRegion, "region", "", "AWS Connection default region")
 	flag.StringVar(&flags.AssumeRoleArn, "assume", "", "AWS Role to assume for getting Organization accounts")
 	flag.StringVar(&flags.TemplatePath, "template", "", "Custom connections template path")
+	flag.StringVar(&flags.LogFormat, "log", "default", "Log format: default, json")
 	targetRegions := flag.String("regions", "all", "AWS Connection target regions")
 	skipOUs := flag.String("skipOUs", "", "AWS OU IDs to skip from account connections")
 	flag.Parse()
@@ -75,9 +77,9 @@ func ParseFlags() (*CmdFlags, error) {
 		flags.DefaultRegion = os.Getenv("AWS_REGION")
 		if flags.DefaultRegion == "" {
 			flags.DefaultRegion = "us-east-1"
-			log.Warn("default region not defined, using:", flags.DefaultRegion)
+			log.Info("default region not defined, using:", flags.DefaultRegion)
 		} else {
-			log.Info("default region not defined, using value from env AWS_REGION: ", flags.DefaultRegion)
+			log.Debug("default region not defined, using value from env AWS_REGION: ", flags.DefaultRegion)
 		}
 	}
 
@@ -90,6 +92,11 @@ func ParseFlags() (*CmdFlags, error) {
 
 	flags.SkipOUs = strings.Split(*skipOUs, ",")
 	log.Debug("skipOUs: ", flags.SkipOUs)
+
+	if flags.LogFormat != "default" && flags.LogFormat != "json" {
+		flag.Usage()
+		return nil, fmt.Errorf("-log unknown value. Valid values are: default, json")
+	}
 
 	return &flags, nil
 }

@@ -11,6 +11,7 @@ import (
 
 	"github.com/unicrons/steampipe-config-generator/cmd"
 	"github.com/unicrons/steampipe-config-generator/pkg/aws"
+	"github.com/unicrons/steampipe-config-generator/pkg/logger"
 
 	log "github.com/sirupsen/logrus"
 )
@@ -116,6 +117,9 @@ func main() {
 	assumeRoleArn := flags.AssumeRoleArn
 	templatePath := flags.TemplatePath
 	skipOUs := flags.SkipOUs
+	logFormat := flags.LogFormat
+
+	logger.SetLoggerFormat(logFormat)
 
 	accounts, err := aws.GetOrganizationAccounts(assumeRoleArn, defaultRegion)
 	if err != nil {
