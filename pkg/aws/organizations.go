@@ -7,6 +7,7 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/service/organizations"
+
 	log "github.com/sirupsen/logrus"
 )
 
@@ -74,7 +75,6 @@ func (c *OrganizationsClient) listOrganizationAccountTags(accountId *string) (ma
 }
 
 func (c *OrganizationsClient) getAccountOU(accountId *string) (string, error) {
-
 	params := &organizations.ListParentsInput{
 		ChildId: accountId,
 	}
@@ -114,8 +114,9 @@ func (c *OrganizationsClient) listOrganizationAccounts() ([]OrganizationAccount,
 		}
 	}
 
-	semAccountTags := make(chan struct{}, 50)
-	semAccountOU := make(chan struct{}, 3)
+	// Individual API rate limits
+	semAccountTags := make(chan struct{}, 8) // Conservative: under 10 TPS, burst 15 limit
+	semAccountOU := make(chan struct{}, 3)   // Conservative: under 5 TPS, burst 8 limit
 
 	var wgAccountTags sync.WaitGroup
 	for i, acc := range allAccounts {
